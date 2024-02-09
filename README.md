@@ -41,6 +41,7 @@ npm run build
 yarn build
 ```
 ## Архитектура
+![Image alt](https://github.com/khuranidara/web-larek-frontend/raw/main/UML_scheme.png)
 ![Image alt](C:\Users\Dasha\Documents\Git\web-larek-frontend\UML_scheme.png)
 ## Базовый код
 ## Компоненты модели данных
