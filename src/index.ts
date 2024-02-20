@@ -3,16 +3,17 @@ import { Product } from './types/Product';
 import { Api } from './components/base/api';
 import { API_URL } from './utils/constants';
 import { ProductItems } from './types/ProductItems';
+import * as querystring from 'querystring';
 
 const gallery = document.querySelector('.gallery');
 const cardtemp = document.querySelector("#card-catalog") as HTMLTemplateElement;
 const api = new Api(API_URL);
-
+let productItems: ProductItems = {} as ProductItems;
 function cloneTemplate(){
 
 api.get("/product/").then( result => {
 
-	const productItems: ProductItems = result as ProductItems;
+	productItems = result as ProductItems;
 	console.log(productItems.items);
 
 	for (let i = 0; i < productItems.total; i++) {
@@ -63,6 +64,7 @@ function openFilledPreview(product: Product) {
 	const title = previewClone.querySelector('.card__title');
 	const text = previewClone.querySelector('.card__text');
 	const price = previewClone.querySelector('.card__price');
+	const addToBasketButton = previewClone.querySelector('.card__button');
 
 	image.setAttribute('src', 'https://larek-api.nomoreparties.co/content/weblarek' + product.image);
 	category.textContent = product.category;
@@ -76,7 +78,11 @@ function openFilledPreview(product: Product) {
 			price.textContent = "Бесценно";
 		}
 	}
-}
+	addToBasketButton.addEventListener('click', () => {
+		addToBasket(product.id);
+		upateBasketCounter();
+	});
+};
 
 
 const basketTemplate = document.getElementById('basket') as HTMLTemplateElement;
@@ -89,9 +95,37 @@ basket_button.addEventListener("click", function(event) {
 	const basketContent = basketTemplate.content.cloneNode(true);
 	modalContent.appendChild(basketContent);
 	modalContainer.classList.add('modal_active');
+	fillBasket();
 });
 
 const closeModalButton = modalContainer.querySelector('.modal__close');
 closeModalButton.addEventListener("click", function(event) {
 	modalContainer.classList.remove('modal_active');
 });
+
+const basket: string[] =[];
+function addToBasket(productId: string) {
+	basket.push(productId);
+
+}
+
+function fillBasket(){
+	for (let i = 0; i < basket.length; i++) {
+		const productId = basket[i];
+		const cardBasketTemplate = document.getElementById('card-basket') as HTMLTemplateElement;
+		const basketList = document.querySelector('.basket__list');
+		const basketItem = cardBasketTemplate.content.cloneNode(true) as HTMLElement;
+		const title = basketItem.querySelector('.card__title');
+		const price = basketItem.querySelector('.card__price');
+		const product = productItems.items.find(product=> product.id == productId);
+		title.textContent = product.title;
+		price.textContent = product.price.toString() + " синапсов";
+		basketList.appendChild(basketItem);
+	}
+}
+function upateBasketCounter() {
+	const basketCounterElement = document.querySelector('.header__basket-counter');
+	if (basketCounterElement) {
+		basketCounterElement.textContent = basket.length.toString();
+	}
+}
