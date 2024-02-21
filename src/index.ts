@@ -105,23 +105,45 @@ closeModalButton.addEventListener("click", function(event) {
 
 const basket: string[] =[];
 function addToBasket(productId: string) {
-	basket.push(productId);
-
+	if (!basket.includes(productId)) {
+		basket.push(productId);
+		upateBasketCounter();
+	}
 }
 
 function fillBasket(){
+	let totalPrice = 0;
+	const basketList = document.querySelector('.basket__list');
+	while (basketList.firstChild) {
+		basketList.removeChild(basketList.firstChild);
+	}
 	for (let i = 0; i < basket.length; i++) {
 		const productId = basket[i];
-		const cardBasketTemplate = document.getElementById('card-basket') as HTMLTemplateElement;
-		const basketList = document.querySelector('.basket__list');
-		const basketItem = cardBasketTemplate.content.cloneNode(true) as HTMLElement;
-		const title = basketItem.querySelector('.card__title');
-		const price = basketItem.querySelector('.card__price');
 		const product = productItems.items.find(product=> product.id == productId);
-		title.textContent = product.title;
-		price.textContent = product.price.toString() + " синапсов";
-		basketList.appendChild(basketItem);
+			const cardBasketTemplate = document.getElementById('card-basket') as HTMLTemplateElement;
+			const basketItem = cardBasketTemplate.content.cloneNode(true) as HTMLElement;
+			const indexSpan = basketItem.querySelector('.basket__item-index');
+			const title = basketItem.querySelector('.card__title');
+			const price = basketItem.querySelector('.card__price');
+			const deleteButton = basketItem.querySelector('.basket__item-delete');
+			indexSpan.textContent = `${i+1}`;
+			title.textContent = product.title;
+			if (product.price!== null) {
+				price.textContent = product.price.toString() + " синапсов";
+				totalPrice += product.price;
+			} else {
+				price.textContent = "Бесценно"
+				totalPrice += 0;
+			}
+			deleteButton.addEventListener('click', () =>{
+				basket.splice(i,1);
+				fillBasket();
+				upateBasketCounter();
+			});
+			basketList.appendChild(basketItem);
 	}
+		const  totalPriceElement = document.querySelector('.basket__price');
+		totalPriceElement.textContent = `${totalPrice} синапсов`;
 }
 function upateBasketCounter() {
 	const basketCounterElement = document.querySelector('.header__basket-counter');
