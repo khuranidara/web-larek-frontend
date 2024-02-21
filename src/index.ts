@@ -144,10 +144,21 @@ function fillBasket(){
 	}
 		const  totalPriceElement = document.querySelector('.basket__price');
 		totalPriceElement.textContent = `${totalPrice} синапсов`;
+		const checkoutButton = modalContent.querySelector('.basket__button');
+		checkoutButton.addEventListener('click', function(event) {
+			modalContent.innerHTML = '';
+			const orderContent = orderTemplate.content.cloneNode(true);
+			modalContent.appendChild(orderContent);
+			modalContainer.classList.add('modal_active');
+		})
 }
+
 function upateBasketCounter() {
 	const basketCounterElement = document.querySelector('.header__basket-counter');
 	if (basketCounterElement) {
 		basketCounterElement.textContent = basket.length.toString();
 	}
 }
+
+
+const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
