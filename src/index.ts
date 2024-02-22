@@ -4,6 +4,7 @@ import { Api } from './components/base/api';
 import { API_URL } from './utils/constants';
 import { ProductItems } from './types/ProductItems';
 import * as querystring from 'querystring';
+import { Customer } from './types/Customer';
 
 const gallery = document.querySelector('.gallery');
 const cardtemp = document.querySelector("#card-catalog") as HTMLTemplateElement;
@@ -150,6 +151,52 @@ function fillBasket(){
 			const orderContent = orderTemplate.content.cloneNode(true);
 			modalContent.appendChild(orderContent);
 			modalContainer.classList.add('modal_active');
+			const orderForm:HTMLFormElement = modalContent.querySelector('.order');
+			const onlinePaymentButton = orderForm.querySelector('button[name="card"]');
+			const cashPaymentButton = orderForm.querySelector('button[name="cash"]');
+			const addressInput:HTMLInputElement = modalContent.querySelector('.form__input');
+			const errorSpan = modalContent.querySelector('.form__errors');
+			const nextButton = modalContent.querySelector('.order__button');
+
+			let payType = 0;
+			onlinePaymentButton.addEventListener('click', function() {
+				payType = 0;
+				onlinePaymentButton.classList.add('button_alt-active');
+				cashPaymentButton.classList.remove('button_alt-active');
+				console.log('paytype:' + payType);
+			});
+			cashPaymentButton.addEventListener('click', function() {
+				payType = 1;
+				cashPaymentButton.classList.add('button_alt-active');
+				onlinePaymentButton.classList.remove('button_alt-active');
+				console.log('paytype:' + payType);
+			});
+			addressInput.addEventListener('input', function(){
+				if (addressInput.value.trim() != '') {
+					nextButton.removeAttribute('disabled');
+					errorSpan.textContent = '';
+				} else {
+					nextButton.setAttribute('disabled', 'true');
+					errorSpan.textContent = 'Пожалуйста, введите адрес доставки';
+				}
+			});
+			modalContent.addEventListener('submit', function(event) {
+				event.preventDefault();
+				const payTypeValue = payType;
+				const deliveryAddress = addressInput.value.trim();
+				customer = {
+					id: '',
+					payType: payTypeValue,
+					address: deliveryAddress,
+					email: '',
+					phone: ''
+				}
+				console.log('payType:', customer.payType);
+				console.log('Delivery address:', customer.address);
+			});
+			nextButton.addEventListener('click', function() {
+				console.log('Далее');
+			});
 		})
 }
 
@@ -162,3 +209,5 @@ function upateBasketCounter() {
 
 
 const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
+
+let customer: Customer | null = null;

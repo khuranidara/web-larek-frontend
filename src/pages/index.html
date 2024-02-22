@@ -221,7 +221,7 @@
 				</div>
 				<label class="order__field">
 					<span class="form__label modal__title">Адрес доставки</span>
-					<input name="address" class="form__input" type="text" placeholder="Введите адрес" />
+					<input name="address" class="form__input" type="text" placeholder="Введите адрес" minlength="5" maxlength="100" pattern="[a-zA-Zа-яА-Я0-9\s\-\.,\/]+" title="Адрес может содержать буквы, цифры, пробелы и следующие символы: -, ., , и /"/>
 				</label>
 			</div>
 			<div class="modal__actions">
