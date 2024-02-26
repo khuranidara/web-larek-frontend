@@ -82,6 +82,7 @@ function openFilledPreview(product: Product) {
 	addToBasketButton.addEventListener('click', () => {
 		addToBasket(product.id);
 		upateBasketCounter();
+		modalContainer.classList.remove('modal_active');
 	});
 };
 
@@ -145,7 +146,10 @@ function fillBasket(){
 	}
 		const  totalPriceElement = document.querySelector('.basket__price');
 		totalPriceElement.textContent = `${totalPrice} синапсов`;
-		const checkoutButton = modalContent.querySelector('.basket__button');
+		const checkoutButton = modalContent.querySelector('.basket__button') as HTMLButtonElement;
+		if (basket.length === 0) {
+			checkoutButton.disabled = true;
+		}
 		checkoutButton.addEventListener('click', function(event) {
 			modalContent.innerHTML = '';
 			const orderContent = orderTemplate.content.cloneNode(true);
@@ -196,6 +200,40 @@ function fillBasket(){
 			});
 			nextButton.addEventListener('click', function() {
 				console.log('Далее');
+				modalContent.innerHTML = '';
+				const contactsContent = contactsTemplate.content.cloneNode(true);
+				modalContent.appendChild(contactsContent);
+				modalContainer.classList.add('modal_active');
+				const emailInput: HTMLInputElement = modalContent.querySelector('input[name="email"]');
+				const phoneInput: HTMLInputElement = modalContent.querySelector('input[name="phone"]');
+				const contactsForm: HTMLFormElement = modalContent.querySelector('.form');
+				const submitButton: HTMLButtonElement = modalContent.querySelector('button[type="submit"]');
+				const contactsErrorSpan: HTMLSpanElement = modalContent.querySelector('.form__errors');
+
+				emailInput.addEventListener('input', function() {
+					if (emailInput.checkValidity() && phoneInput.checkValidity() && emailInput.value.trim() !== '' && phoneInput.value.trim() !== '') {
+						submitButton.removeAttribute('disabled');
+						contactsErrorSpan.textContent = '';
+					} else {
+						submitButton.setAttribute('disabled', 'true');
+						contactsErrorSpan.textContent = 'Пожалуйста, заполните все поля и укажите корректные данные';
+					}
+				});
+
+				phoneInput.addEventListener('input', function() {
+					if (emailInput.checkValidity() && phoneInput.checkValidity() && emailInput.value.trim() !== '' && phoneInput.value.trim() !== '') {
+						submitButton.removeAttribute('disabled');
+						contactsErrorSpan.textContent = '';
+					} else {
+						submitButton.setAttribute('disabled', 'true');
+						contactsErrorSpan.textContent = 'Пожалуйста, заполните все поля и укажите корректные данные';
+					}
+				});
+					contactsForm.addEventListener('submit', function(event) {
+						event.preventDefault();
+						console.log('Заказ оформлен');
+
+					});
 			});
 		})
 }
@@ -211,3 +249,5 @@ function upateBasketCounter() {
 const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
 
 let customer: Customer | null = null;
+
+const contactsTemplate:HTMLTemplateElement = document.getElementById('contacts') as HTMLTemplateElement;
