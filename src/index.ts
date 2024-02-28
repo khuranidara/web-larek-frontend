@@ -112,9 +112,8 @@ function addToBasket(productId: string) {
 		upateBasketCounter();
 	}
 }
-
+let totalPrice = 0;
 function fillBasket(){
-	let totalPrice = 0;
 	const basketList = document.querySelector('.basket__list');
 	while (basketList.firstChild) {
 		basketList.removeChild(basketList.firstChild);
@@ -184,20 +183,20 @@ function fillBasket(){
 					errorSpan.textContent = 'Пожалуйста, введите адрес доставки';
 				}
 			});
-			modalContent.addEventListener('submit', function(event) {
-				event.preventDefault();
-				const payTypeValue = payType;
-				const deliveryAddress = addressInput.value.trim();
-				customer = {
-					id: '',
-					payType: payTypeValue,
-					address: deliveryAddress,
-					email: '',
-					phone: ''
-				}
-				console.log('payType:', customer.payType);
-				console.log('Delivery address:', customer.address);
-			});
+//			modalContent.addEventListener('submit', function(event) {
+//				event.preventDefault();
+//				const payTypeValue = payType;
+//				const deliveryAddress = addressInput.value.trim();
+//				customer = {
+//					id: '',
+//					payType: payTypeValue,
+//					address: deliveryAddress,
+//					email: '',
+//					phone: ''
+//				}
+//				console.log('payType:', customer.payType);
+//				console.log('Delivery address:', customer.address);
+//			});
 			nextButton.addEventListener('click', function() {
 				console.log('Далее');
 				modalContent.innerHTML = '';
@@ -232,8 +231,25 @@ function fillBasket(){
 					contactsForm.addEventListener('submit', function(event) {
 						event.preventDefault();
 						console.log('Заказ оформлен');
-
 					});
+
+				submitButton.addEventListener('click', function(event) {
+					event.preventDefault();
+					modalContent.innerHTML = '';
+					const successTemplate = document.getElementById('success') as HTMLTemplateElement;
+					const successContent = successTemplate.content.cloneNode(true) as HTMLElement;
+					modalContent.appendChild(successContent);
+					const descriptionElement = modalContent.querySelector('.order-success__description');
+					if (descriptionElement) {
+						descriptionElement.textContent = `Списано ${totalPrice} синапсов`;
+					}
+					const closeModalButton = modalContent.querySelector('.order-success__close');
+					closeModalButton.addEventListener("click", function(event) {
+						modalContainer.classList.remove('modal_active');
+					});
+					basket.length = 0;
+					upateBasketCounter();
+				});
 			});
 		})
 }
