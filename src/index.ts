@@ -45,7 +45,23 @@ function renderProductCard(product: Product):DocumentFragment  {
 			price.textContent = "Бесценно";
 		}
 	}
-
+	switch (product.category) {
+		case "софт-скил":
+			category.classList.add('card__category_soft');
+			break;
+		case "хард-скил":
+			category.classList.add('card__category_hard');
+			break;
+		case "другое":
+			category.classList.add('card__category_other');
+			break;
+		case "дополнительное":
+			category.classList.add('card__category_additional');
+			break;
+		default:
+			category.classList.add('card__category_button');
+			break;
+	}
 	card.addEventListener('click', () => {
 		console.log("card clicked");
 		openFilledPreview(product);
@@ -58,6 +74,7 @@ cloneTemplate();
 
 function openFilledPreview(product: Product) {
 	modalContainer.classList.add('modal_active');
+	modalContainer.style.position = "fixed";
 	modalContent.innerHTML = '';
 	const previewClone = document.importNode(previewTemplate.content, true);
 	const image = previewClone.querySelector('.card__image');
@@ -83,6 +100,7 @@ function openFilledPreview(product: Product) {
 		addToBasket(product.id);
 		upateBasketCounter();
 		modalContainer.classList.remove('modal_active');
+		modalContainer.style.position = "fixed";
 	});
 };
 
@@ -97,12 +115,14 @@ basket_button.addEventListener("click", function(event) {
 	const basketContent = basketTemplate.content.cloneNode(true);
 	modalContent.appendChild(basketContent);
 	modalContainer.classList.add('modal_active');
+	modalContainer.style.position = "fixed";
 	fillBasket();
 });
 
 const closeModalButton = modalContainer.querySelector('.modal__close');
 closeModalButton.addEventListener("click", function(event) {
 	modalContainer.classList.remove('modal_active');
+	modalContainer.style.position = "fixed";
 });
 
 const basket: string[] =[];
@@ -154,13 +174,13 @@ function fillBasket(){
 			const orderContent = orderTemplate.content.cloneNode(true);
 			modalContent.appendChild(orderContent);
 			modalContainer.classList.add('modal_active');
+			modalContainer.style.position = "fixed";
 			const orderForm:HTMLFormElement = modalContent.querySelector('.order');
 			const onlinePaymentButton = orderForm.querySelector('button[name="card"]');
 			const cashPaymentButton = orderForm.querySelector('button[name="cash"]');
 			const addressInput:HTMLInputElement = modalContent.querySelector('.form__input');
 			const errorSpan = modalContent.querySelector('.form__errors');
 			const nextButton = modalContent.querySelector('.order__button');
-
 			let payType = 0;
 			onlinePaymentButton.addEventListener('click', function() {
 				payType = 0;
@@ -183,26 +203,13 @@ function fillBasket(){
 					errorSpan.textContent = 'Пожалуйста, введите адрес доставки';
 				}
 			});
-//			modalContent.addEventListener('submit', function(event) {
-//				event.preventDefault();
-//				const payTypeValue = payType;
-//				const deliveryAddress = addressInput.value.trim();
-//				customer = {
-//					id: '',
-//					payType: payTypeValue,
-//					address: deliveryAddress,
-//					email: '',
-//					phone: ''
-//				}
-//				console.log('payType:', customer.payType);
-//				console.log('Delivery address:', customer.address);
-//			});
 			nextButton.addEventListener('click', function() {
 				console.log('Далее');
 				modalContent.innerHTML = '';
 				const contactsContent = contactsTemplate.content.cloneNode(true);
 				modalContent.appendChild(contactsContent);
 				modalContainer.classList.add('modal_active');
+				modalContainer.style.position = "fixed";
 				const emailInput: HTMLInputElement = modalContent.querySelector('input[name="email"]');
 				const phoneInput: HTMLInputElement = modalContent.querySelector('input[name="phone"]');
 				const contactsForm: HTMLFormElement = modalContent.querySelector('.form');
@@ -246,9 +253,11 @@ function fillBasket(){
 					const closeModalButton = modalContent.querySelector('.order-success__close');
 					closeModalButton.addEventListener("click", function(event) {
 						modalContainer.classList.remove('modal_active');
+						modalContainer.style.position = "fixed";
 					});
 					basket.length = 0;
 					upateBasketCounter();
+					totalPrice = 0;
 				});
 			});
 		})
