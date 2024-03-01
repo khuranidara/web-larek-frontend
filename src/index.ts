@@ -133,11 +133,21 @@ function addToBasket(productId: string) {
 	}
 }
 let totalPrice = 0;
+const orderData = {
+	payment: 'online',
+	email: '',
+	phone:'',
+	address: '',
+	total: 0,
+	items: [] as string[]
+};
 function fillBasket(){
 	const basketList = document.querySelector('.basket__list');
 	while (basketList.firstChild) {
 		basketList.removeChild(basketList.firstChild);
 	}
+	totalPrice = 0;
+	orderData.items = [];
 	for (let i = 0; i < basket.length; i++) {
 		const productId = basket[i];
 		const product = productItems.items.find(product=> product.id == productId);
@@ -162,9 +172,11 @@ function fillBasket(){
 				upateBasketCounter();
 			});
 			basketList.appendChild(basketItem);
+			orderData.items.push(productId);
 	}
 		const  totalPriceElement = document.querySelector('.basket__price');
 		totalPriceElement.textContent = `${totalPrice} синапсов`;
+		orderData.total = totalPrice;
 		const checkoutButton = modalContent.querySelector('.basket__button') as HTMLButtonElement;
 		if (basket.length === 0) {
 			checkoutButton.disabled = true;
@@ -181,21 +193,24 @@ function fillBasket(){
 			const addressInput:HTMLInputElement = modalContent.querySelector('.form__input');
 			const errorSpan = modalContent.querySelector('.form__errors');
 			const nextButton = modalContent.querySelector('.order__button');
-			let payType = 0;
+			let payType = 'online';
 			onlinePaymentButton.addEventListener('click', function() {
-				payType = 0;
+				payType = 'online';
+				orderData.payment = payType;
 				onlinePaymentButton.classList.add('button_alt-active');
 				cashPaymentButton.classList.remove('button_alt-active');
 				console.log('paytype:' + payType);
 			});
 			cashPaymentButton.addEventListener('click', function() {
-				payType = 1;
+				payType = 'offline';
+				orderData.payment = payType;
 				cashPaymentButton.classList.add('button_alt-active');
 				onlinePaymentButton.classList.remove('button_alt-active');
 				console.log('paytype:' + payType);
 			});
 			addressInput.addEventListener('input', function(){
 				if (addressInput.value.trim() != '') {
+					orderData.address = addressInput.value.trim();
 					nextButton.removeAttribute('disabled');
 					errorSpan.textContent = '';
 				} else {
@@ -218,11 +233,13 @@ function fillBasket(){
 
 				emailInput.addEventListener('input', function() {
 					if (emailInput.checkValidity() && phoneInput.checkValidity() && emailInput.value.trim() !== '' && phoneInput.value.trim() !== '') {
+						orderData.email = emailInput.value.trim();
 						submitButton.removeAttribute('disabled');
 						contactsErrorSpan.textContent = '';
 					} else {
 						submitButton.setAttribute('disabled', 'true');
 						contactsErrorSpan.textContent = 'Пожалуйста, заполните все поля и укажите корректные данные';
+						orderData.email = emailInput.value.trim();
 					}
 				});
 
@@ -230,34 +247,46 @@ function fillBasket(){
 					if (emailInput.checkValidity() && phoneInput.checkValidity() && emailInput.value.trim() !== '' && phoneInput.value.trim() !== '') {
 						submitButton.removeAttribute('disabled');
 						contactsErrorSpan.textContent = '';
+						orderData.phone = phoneInput.value.trim();
 					} else {
 						submitButton.setAttribute('disabled', 'true');
 						contactsErrorSpan.textContent = 'Пожалуйста, заполните все поля и укажите корректные данные';
 					}
 				});
-					contactsForm.addEventListener('submit', function(event) {
-						event.preventDefault();
-						console.log('Заказ оформлен');
-					});
-
 				submitButton.addEventListener('click', function(event) {
 					event.preventDefault();
-					modalContent.innerHTML = '';
-					const successTemplate = document.getElementById('success') as HTMLTemplateElement;
-					const successContent = successTemplate.content.cloneNode(true) as HTMLElement;
-					modalContent.appendChild(successContent);
-					const descriptionElement = modalContent.querySelector('.order-success__description');
-					if (descriptionElement) {
-						descriptionElement.textContent = `Списано ${totalPrice} синапсов`;
-					}
-					const closeModalButton = modalContent.querySelector('.order-success__close');
-					closeModalButton.addEventListener("click", function(event) {
-						modalContainer.classList.remove('modal_active');
-						modalContainer.style.position = "fixed";
-					});
-					basket.length = 0;
-					upateBasketCounter();
-					totalPrice = 0;
+					console.log('Данные заказа:', orderData);
+					fetch('https://larek-api.nomoreparties.co/api/weblarek/order', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(orderData),
+					})
+						.then(response => {
+							modalContent.innerHTML = '';
+							const successTemplate = document.getElementById('success') as HTMLTemplateElement;
+							const successContent = successTemplate.content.cloneNode(true) as HTMLElement;
+							modalContent.appendChild(successContent);
+							const descriptionElement = modalContent.querySelector('.order-success__description');
+							if (descriptionElement) {
+								descriptionElement.textContent = `Списано ${totalPrice} синапсов`;
+							}
+							const closeModalButton = modalContent.querySelector('.order-success__close');
+							closeModalButton.addEventListener("click", function(event) {
+								modalContainer.classList.remove('modal_active');
+								modalContainer.style.position = "fixed";
+							});
+							basket.length = 0;
+							upateBasketCounter();
+							totalPrice = 0;
+						})
+						.then(data => {
+							console.log('Ответ сервера:', data);
+						})
+						.catch(error => {
+							console.error('Ошибка:', error);
+						});
 				});
 			});
 		})
