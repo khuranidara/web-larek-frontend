@@ -4,7 +4,8 @@ import { Api } from './components/base/api';
 import { API_URL } from './utils/constants';
 import { ProductItems } from './types/ProductItems';
 import * as querystring from 'querystring';
-import { Customer } from './types/Customer';
+import { OrderData } from './types/OrderData';
+import { ensureElement } from './utils/utils';
 
 const gallery = document.querySelector('.gallery');
 const cardtemp = document.querySelector('#card-catalog') as HTMLTemplateElement;
@@ -100,7 +101,7 @@ function openFilledPreview(product: Product) {
 	}
 	addToBasketButton.addEventListener('click', () => {
 		addToBasket(product.id);
-		upateBasketCounter();
+		document.dispatchEvent(new CustomEvent('basketUpdated'));
 		modalContainer.classList.remove('modal_active');
 		modalContainer.style.position = 'fixed';
 	});
@@ -132,12 +133,13 @@ const basket: string[] = [];
 function addToBasket(productId: string) {
 	if (!basket.includes(productId)) {
 		basket.push(productId);
-		upateBasketCounter();
+		document.dispatchEvent(new CustomEvent('basketUpdated'));
 	}
 }
 
 let totalPrice = 0;
-const orderData = {
+
+const orderData: OrderData = {
 	payment: 'online',
 	email: '',
 	phone: '',
@@ -174,7 +176,7 @@ function fillBasket() {
 		deleteButton.addEventListener('click', () => {
 			basket.splice(i, 1);
 			fillBasket();
-			upateBasketCounter();
+			document.dispatchEvent(new CustomEvent('basketUpdated'));
 		});
 		basketList.appendChild(basketItem);
 		orderData.items.push(productId);
@@ -192,29 +194,32 @@ function fillBasket() {
 		modalContent.appendChild(orderContent);
 		modalContainer.classList.add('modal_active');
 		modalContainer.style.position = 'fixed';
-		const orderForm: HTMLFormElement = modalContent.querySelector('.order');
-		const onlinePaymentButton = orderForm.querySelector('button[name="card"]');
-		const cashPaymentButton = orderForm.querySelector('button[name="cash"]');
-		const addressInput: HTMLInputElement = modalContent.querySelector('.form__input');
-		const errorSpan = modalContent.querySelector('.form__errors');
-		const nextButton = modalContent.querySelector('.order__button');
 		let payType = 'online';
-		onlinePaymentButton.addEventListener('click', function() {
+		const orderForm = ensureElement('.order', modalContent);
+		const onlinePaymentButton = ensureElement('button[name="card"]', orderForm);
+		const cashPaymentButton = ensureElement('button[name="cash"]', orderForm);
+		const addressInput = ensureElement<HTMLInputElement>('.form__input', modalContent);
+		const errorSpan = ensureElement('.form__errors', modalContent);
+		const nextButton = ensureElement('.order__button', modalContent);
+
+		onlinePaymentButton.addEventListener('click', function () {
 			payType = 'online';
 			orderData.payment = payType;
 			onlinePaymentButton.classList.add('button_alt-active');
 			cashPaymentButton.classList.remove('button_alt-active');
 			console.log('paytype:' + payType);
 		});
-		cashPaymentButton.addEventListener('click', function() {
+
+		cashPaymentButton.addEventListener('click', function () {
 			payType = 'offline';
 			orderData.payment = payType;
 			cashPaymentButton.classList.add('button_alt-active');
 			onlinePaymentButton.classList.remove('button_alt-active');
 			console.log('paytype:' + payType);
 		});
-		addressInput.addEventListener('input', function() {
-			if (addressInput.value.trim() != '') {
+
+		addressInput.addEventListener('input', function () {
+			if (addressInput.value.trim() !== '') {
 				orderData.address = addressInput.value.trim();
 				nextButton.removeAttribute('disabled');
 				errorSpan.textContent = '';
@@ -235,27 +240,52 @@ function fillBasket() {
 			const contactsForm: HTMLFormElement = modalContent.querySelector('.form');
 			const submitButton: HTMLButtonElement = modalContent.querySelector('button[type="submit"]');
 			const contactsErrorSpan: HTMLSpanElement = modalContent.querySelector('.form__errors');
-
-			emailInput.addEventListener('input', function() {
+			emailInput.addEventListener('input', function () {
 				if (emailInput.checkValidity() && phoneInput.checkValidity() && emailInput.value.trim() !== '' && phoneInput.value.trim() !== '') {
 					orderData.email = emailInput.value.trim();
 					submitButton.removeAttribute('disabled');
 					contactsErrorSpan.textContent = '';
 				} else {
 					submitButton.setAttribute('disabled', 'true');
-					contactsErrorSpan.textContent = 'Пожалуйста, заполните все поля и укажите корректные данные';
+					let errorMessage = '';
+					if (!emailInput.checkValidity()) {
+						errorMessage += 'Пожалуйста, введите корректный email. ';
+					}
+					if (!phoneInput.checkValidity()) {
+						errorMessage += 'Пожалуйста, введите корректный номер телефона. ';
+					}
+					if (emailInput.value.trim() === '') {
+						errorMessage += 'Пожалуйста, укажите email. ';
+					}
+					if (phoneInput.value.trim() === '') {
+						errorMessage += 'Пожалуйста, укажите номер телефона. ';
+					}
+					contactsErrorSpan.textContent = errorMessage;
 					orderData.email = emailInput.value.trim();
 				}
 			});
 
-			phoneInput.addEventListener('input', function() {
+			phoneInput.addEventListener('input', function () {
 				if (emailInput.checkValidity() && phoneInput.checkValidity() && emailInput.value.trim() !== '' && phoneInput.value.trim() !== '') {
 					submitButton.removeAttribute('disabled');
 					contactsErrorSpan.textContent = '';
 					orderData.phone = phoneInput.value.trim();
 				} else {
 					submitButton.setAttribute('disabled', 'true');
-					contactsErrorSpan.textContent = 'Пожалуйста, заполните все поля и укажите корректные данные';
+					let errorMessage = '';
+					if (!emailInput.checkValidity()) {
+						errorMessage += 'Пожалуйста, введите корректный email. ';
+					}
+					if (!phoneInput.checkValidity()) {
+						errorMessage += 'Пожалуйста, введите корректный номер телефона. ';
+					}
+					if (emailInput.value.trim() === '') {
+						errorMessage += 'Пожалуйста, укажите email. ';
+					}
+					if (phoneInput.value.trim() === '') {
+						errorMessage += 'Пожалуйста, укажите номер телефона. ';
+					}
+					contactsErrorSpan.textContent = errorMessage;
 				}
 			});
 			submitButton.addEventListener('click', function(event) {
@@ -277,15 +307,20 @@ function fillBasket() {
 						modalContainer.style.position = 'fixed';
 					});
 					basket.length = 0;
-					upateBasketCounter();
+					document.dispatchEvent(new CustomEvent('basketUpdated'));
 					totalPrice = 0;
 				});
 			});
 		});
 	});
 }
+const basketList = document.querySelector('.basket__list');
+document.addEventListener('basketUpdated', function () {
+	basketList.innerHTML = '';
+	updateBasketCounter();
+});
 
-function upateBasketCounter() {
+function updateBasketCounter() {
 	const basketCounterElement = document.querySelector('.header__basket-counter');
 	if (basketCounterElement) {
 		basketCounterElement.textContent = basket.length.toString();
@@ -295,6 +330,11 @@ function upateBasketCounter() {
 
 const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
 
-let customer: Customer | null = null;
-
 const contactsTemplate: HTMLTemplateElement = document.getElementById('contacts') as HTMLTemplateElement;
+
+window.addEventListener('click', function(event) {
+	if (event.target === modalContainer) {
+		modalContainer.classList.remove('modal_active');
+		modalContainer.style.position = 'fixed';
+	}
+});
